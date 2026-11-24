@@ -9,10 +9,8 @@ import {
   Download,
   FileJson,
   Fingerprint,
-  GitCompareArrows,
   Info,
   Printer,
-  ScanSearch,
   ShieldAlert,
 } from "lucide-react";
 
@@ -63,10 +61,9 @@ export function ReportView() {
   if (!report) {
     return (
       <main className="empty-report">
-        <span className="brand-mark"><ScanSearch aria-hidden="true" /></span>
-        <p className="section-kicker">No report in this session</p>
+        <p className="brand">APKInspector</p>
         <h1>Analyze an APK to create a report.</h1>
-        <p>Reports stay in your browser session and are not retained by the analysis service.</p>
+        <p>No report in this session. Reports stay in your browser session and are not retained by the analysis service.</p>
         <Link className="primary-link" href="/">Return to analyzer</Link>
       </main>
     );
@@ -76,7 +73,7 @@ export function ReportView() {
   return (
     <main className="report-page">
       <header className="report-nav">
-        <Link href="/" className="brand"><span className="brand-mark"><ScanSearch aria-hidden="true" /></span><span>APKInspector</span></Link>
+        <Link href="/" className="brand">APKInspector</Link>
         <div className="report-actions">
           <button type="button" onClick={() => downloadJson(report)}><FileJson aria-hidden="true" /> Export JSON</button>
           <button type="button" className="primary-action" onClick={() => window.print()}><Printer aria-hidden="true" /> Print or save PDF</button>
@@ -87,10 +84,11 @@ export function ReportView() {
         <Link href="/" className="back-link"><ArrowLeft aria-hidden="true" /> New analysis</Link>
         <section className="report-hero">
           <div className="report-title">
-            <p className="section-kicker">Static analysis complete</p>
             <h1>{report.metadata.app_name}</h1>
             <code>{report.metadata.package_name}</code>
-            <p>Analyzed {new Date(report.received_at).toLocaleString()} · {formatBytes(report.size_bytes)}</p>
+            <p className="caption">Static analysis complete</p>
+            <p>Analyzed {new Date(report.received_at).toLocaleString()}</p>
+            <p>{formatBytes(report.size_bytes)}</p>
           </div>
           <div className={`report-score ${report.risk.rating}`}>
             <div className="score-ring" style={{ "--score": `${report.risk.score * 3.6}deg` } as CSSProperties}>
@@ -110,19 +108,21 @@ export function ReportView() {
 
         {comparison && (
           <section className={`comparison-result ${comparison.possible_repackaging ? "repackaged" : "matched"}`}>
-            <GitCompareArrows aria-hidden="true" />
             <div>
-              <p className="section-kicker">Trusted APK comparison</p>
               <h2>{comparison.possible_repackaging ? "Possible repackaging detected" : comparison.differences.identical_file ? "Files are identical" : "Package differences found"}</h2>
-              <p>
-                Certificate {comparison.differences.signing_certificate_matches ? "matches" : "does not match"} · {comparison.differences.added_permissions.length} added permissions · {comparison.differences.added_components.length} added components · risk score {comparison.differences.risk_score_delta >= 0 ? "+" : ""}{comparison.differences.risk_score_delta}
-              </p>
+              <p className="caption">Trusted APK comparison</p>
+              <dl className="comparison-facts">
+                <div><dt>Certificate</dt><dd>{comparison.differences.signing_certificate_matches ? "matches" : "does not match"}</dd></div>
+                <div><dt>Added permissions</dt><dd>{comparison.differences.added_permissions.length}</dd></div>
+                <div><dt>Added components</dt><dd>{comparison.differences.added_components.length}</dd></div>
+                <div><dt>Risk score</dt><dd>{comparison.differences.risk_score_delta >= 0 ? "+" : ""}{comparison.differences.risk_score_delta}</dd></div>
+              </dl>
             </div>
           </section>
         )}
 
         <section className="report-block">
-          <div className="report-block-heading"><div><p className="section-kicker">Prioritized evidence</p><h2>Security findings</h2></div><span>{report.findings.length} total</span></div>
+          <div className="report-block-heading"><div><h2>Security findings</h2><p className="caption">Prioritized evidence</p></div><span>{report.findings.length} total</span></div>
           {report.findings.length ? (
             <div className="report-findings">
               {report.findings.map((finding) => {
@@ -145,32 +145,32 @@ export function ReportView() {
 
         <div className="report-grid">
           <section className="report-block compact-block">
-            <div className="report-block-heading"><div><p className="section-kicker">Application</p><h2>Package identity</h2></div></div>
+            <div className="report-block-heading"><div><h2>Package identity</h2><p className="caption">Application</p></div></div>
             <dl className="detail-list">
-              <div><dt>Version</dt><dd>{report.metadata.version_name ?? "Unknown"} ({report.metadata.version_code ?? "—"})</dd></div>
-              <div><dt>SDK range</dt><dd>{report.metadata.sdk.minimum ?? "—"} → {report.metadata.sdk.target ?? "—"}</dd></div>
+              <div><dt>Version</dt><dd>{report.metadata.version_name ?? "Unknown"} ({report.metadata.version_code ?? "not recorded"})</dd></div>
+              <div><dt>SDK range</dt><dd>{report.metadata.sdk.minimum ?? "not recorded"} to {report.metadata.sdk.target ?? "not recorded"}</dd></div>
               <div><dt>Main activity</dt><dd>{report.metadata.main_activity ?? "Not declared"}</dd></div>
               <div><dt>SHA-256</dt><dd className="hash-value">{report.sha256}</dd></div>
             </dl>
           </section>
           <section className="report-block compact-block">
-            <div className="report-block-heading"><div><p className="section-kicker">Signing</p><h2>Certificate identity</h2></div><Fingerprint aria-hidden="true" /></div>
+            <div className="report-block-heading"><div><h2>Certificate identity</h2><p className="caption">Signing</p></div><Fingerprint aria-hidden="true" /></div>
             {certificates.length ? certificates.map((certificate) => (
               <dl className="detail-list" key={certificate.sha256}>
                 <div><dt>Subject</dt><dd>{certificate.subject ?? "Subject unavailable"}</dd></div>
                 <div><dt>SHA-256</dt><dd className="hash-value">{certificate.sha256}</dd></div>
-                <div><dt>Schemes</dt><dd>v1 {report.metadata.signing.signed_v1 ? "✓" : "—"} · v2 {report.metadata.signing.signed_v2 ? "✓" : "—"} · v3 {report.metadata.signing.signed_v3 ? "✓" : "—"}</dd></div>
+                <div><dt>Schemes</dt><dd><ul className="scheme-list"><li>v1 {report.metadata.signing.signed_v1 ? "signed" : "absent"}</li><li>v2 {report.metadata.signing.signed_v2 ? "signed" : "absent"}</li><li>v3 {report.metadata.signing.signed_v3 ? "signed" : "absent"}</li></ul></dd></div>
               </dl>
             )) : <p className="muted-copy">No signing certificate was parsed.</p>}
           </section>
         </div>
 
         <section className="report-block compact-block indicator-block">
-          <div className="report-block-heading"><div><p className="section-kicker">Static code signals</p><h2>Endpoints, techniques, and native code</h2></div><Download aria-hidden="true" /></div>
+          <div className="report-block-heading"><div><h2>Endpoints, techniques, and native code</h2><p className="caption">Static code signals</p></div><Download aria-hidden="true" /></div>
           <div className="indicator-grid">
             <div><strong>Observed URLs</strong>{report.code.urls.length ? <ul>{report.code.urls.map((url) => <li key={url}>{url}</li>)}</ul> : <p>None found</p>}</div>
             <div><strong>Techniques</strong>{report.code.techniques.length ? <ul>{report.code.techniques.map((item) => <li key={item.technique}>{item.technique.replaceAll("_", " ")}</li>)}</ul> : <p>None found</p>}</div>
-            <div><strong>Native libraries</strong>{report.code.native_libraries.length ? <ul>{report.code.native_libraries.map((library) => <li key={library.path}>{library.architecture} · {library.path.split("/").at(-1)}</li>)}</ul> : <p>None found</p>}</div>
+            <div><strong>Native libraries</strong>{report.code.native_libraries.length ? <ul>{report.code.native_libraries.map((library) => <li className="library-line" key={library.path}><span>{library.architecture}</span><span>{library.path.split("/").at(-1)}</span></li>)}</ul> : <p>None found</p>}</div>
           </div>
         </section>
         <p className="report-disclaimer">APKInspector performs static analysis and reports indicators, not a guarantee of safety. Review high-impact applications with additional dynamic testing and source-level assessment.</p>

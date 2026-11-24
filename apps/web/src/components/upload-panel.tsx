@@ -152,24 +152,30 @@ export function UploadPanel() {
   }[serviceState];
 
   return (
-    <section className="upload-shell spotlight-card" aria-labelledby="upload-title">
+    <section className="upload-shell" aria-labelledby="upload-title">
       <div className="upload-head">
-        <div><span className="panel-label">Start an inspection</span><h2 id="upload-title">Upload your APK</h2></div>
-        <span className={`service-status ${serviceState}`} aria-live="polite"><i /> {serviceCopy}</span>
+        <div>
+          <h2 id="upload-title">Upload your APK</h2>
+          <p className="panel-note">Start an inspection</p>
+        </div>
+        <span className={`service-status ${serviceState}`} aria-live="polite">{serviceCopy}</span>
       </div>
       <div className={`drop-zone ${isDragging ? "dragging" : ""} ${file ? "has-file" : ""}`} onDragEnter={() => setIsDragging(true)} onDragLeave={() => setIsDragging(false)} onDragOver={(event) => event.preventDefault()} onDrop={onDrop}>
-        <input ref={inputRef} type="file" accept=".apk,application/vnd.android.package-archive" onChange={onInput} />
+        <input ref={inputRef} tabIndex={-1} type="file" accept=".apk,application/vnd.android.package-archive" onChange={onInput} />
         {file ? (
           <div className="selected-file">
             <div className="file-icon"><FileArchive aria-hidden="true" /></div>
-            <div><strong>{file.name}</strong><span>{formatBytes(file.size)} · Ready to inspect</span></div>
+            <div><strong>{file.name}</strong><span>{formatBytes(file.size)}</span><span>Ready to inspect</span></div>
             <button type="button" className="icon-button" onClick={clear} aria-label="Remove selected APK"><X aria-hidden="true" /></button>
           </div>
         ) : (
-          <button type="button" className="drop-button" onClick={() => inputRef.current?.click()}>
-            <span className="upload-icon"><Upload aria-hidden="true" /></span>
-            <strong>Drop an APK here</strong><span>or select a file from your device</span>
-          </button>
+          <>
+            <button type="button" className="drop-button" onClick={() => inputRef.current?.click()}>
+              <Upload aria-hidden="true" />
+              <strong>Drop an APK here</strong>
+            </button>
+            <p className="drop-hint">or select a file from your device</p>
+          </>
         )}
       </div>
       <button
@@ -181,11 +187,12 @@ export function UploadPanel() {
         }}
       >
         <GitCompareArrows aria-hidden="true" />
-        <span><strong>Compare with trusted APK</strong><small>Check signatures and package differences</small></span>
+        <strong>Compare with trusted APK</strong>
       </button>
+      <p className="toggle-note">Check signatures and package differences</p>
       {compareMode && (
         <div className="reference-picker">
-          <input ref={referenceInputRef} type="file" accept=".apk,application/vnd.android.package-archive" onChange={(event) => acceptReference(event.target.files?.[0])} />
+          <input ref={referenceInputRef} tabIndex={-1} type="file" accept=".apk,application/vnd.android.package-archive" onChange={(event) => acceptReference(event.target.files?.[0])} />
           <button type="button" onClick={() => referenceInputRef.current?.click()}>
             <FileArchive aria-hidden="true" />
             <span>{referenceFile ? referenceFile.name : "Select trusted reference APK"}</span>
@@ -195,10 +202,14 @@ export function UploadPanel() {
       )}
       {message && <p className={`upload-message ${state}`} role={state === "error" ? "alert" : "status"}>{message}</p>}
       <button className="analyze-button" type="button" disabled={!file || (compareMode && !referenceFile) || state === "uploading"} onClick={analyze}>
-        {state === "uploading" ? <LoaderCircle className="spin" aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}
+        {state === "uploading" ? <LoaderCircle className="spin keep-motion" aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}
         {state === "uploading" ? "Analyzing package" : compareMode ? "Compare APKs securely" : "Analyze APK securely"}
       </button>
-      <p className="upload-note">Maximum 100 MB · Static inspection · File deleted after analysis</p>
+      <ul className="upload-note">
+        <li>Maximum 100 MB</li>
+        <li>Static inspection</li>
+        <li>File deleted after analysis</li>
+      </ul>
       <button className="demo-button" type="button" onClick={openDemo}><Beaker aria-hidden="true" /> View safe demonstration report</button>
     </section>
   );
